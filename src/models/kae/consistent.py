@@ -58,7 +58,9 @@ class ConsistentAutoencoder(nnx.Module):
 
         # Initialize forward operator as orthogonal
         orth_init = nnx.initializers.orthogonal(scale=init_scale)
-        self.koopman_operator.dynamics.kernel.value = orth_init(rngs[0], (koopman_dim, koopman_dim))
+        self.koopman_operator.dynamics.kernel.value = orth_init(
+            rngs.params(), (koopman_dim, koopman_dim)
+        )
 
         # Initialize backward operator as pseudo-inverse of forward
         self.bwd_koopman_operator.dynamics.kernel.value = jnp.linalg.pinv(
