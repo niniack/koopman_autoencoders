@@ -1,19 +1,24 @@
 """
 Azencot, Omri, et al. "Forecasting sequential data using consistent Koopman autoencoders."
 International Conference on Machine Learning. PMLR, 2020.
+
 https://github.com/erichson/koopmanAE
 
-TODO: Initialization
+A Koopman autoencoder with two linear operators (forward and backward). The encoder and decoder
+are feedforward neural networks with tanh activations. The model is trained with a reconstruction loss,
+a forward loss, a backward loss, and a consistency loss which encourages the two linear
+operators to be inverses of each other.
 
-Differences:
-1. This implementation does not use tanh on the output of the decoder.
-The original implementation does.
+Notes:
+1. We do not use tanh on the output of the decoder, as in the original implementation.
+2. We do not scale reconstruction loss with `steps`, as in the original implementation.
 """
 
 import jax
 import jax.numpy as jnp
 from flax import nnx
 
+# Just a linear layer
 from models.kae.common import VanillaKoopmanOperator
 
 
@@ -27,8 +32,12 @@ class ConsistentAutoencoder(nnx.Module):
         rngs: nnx.Rngs = nnx.Rngs(0),
         lambda_bwd: float = 0.1,
         lambda_consistency: float = 0.01,
+        init_scale: float = 1,
         **kwargs,
     ):
+        self.lambda_bwd = lambda_bwd
+        self.lambda_consistency = lambda_consistency
+
         self.encoder = nnx.Sequential(
             nnx.Linear(input_dim, hidden_dim, rngs=rngs),
             nnx.tanh,
@@ -47,10 +56,14 @@ class ConsistentAutoencoder(nnx.Module):
         self.koopman_operator = VanillaKoopmanOperator(koopman_dim, rngs=rngs)
         self.bwd_koopman_operator = VanillaKoopmanOperator(koopman_dim, rngs=rngs)
 
-        self.lambda_bwd = lambda_bwd
-        self.lambda_consistency = lambda_consistency
+        # Initialize forward operator as orthogonal
+        orth_init = nnx.initializers.orthogonal(scale=init_scale)
+        self.koopman_operator.dynamics.kernel.value = orth_init(rngs[0], (koopman_dim, koopman_dim))
 
-        # TODO: how to do initialization?
+        # Initialize backward operator as pseudo-inverse of forward
+        self.bwd_koopman_operator.dynamics.kernel.value = jnp.linalg.pinv(
+            self.koopman_operator.dynamics.kernel.value
+        )
 
     def __call__(self, x):
         raise ValueError("Not implemented. Use forward_and_loss_function instead.")
@@ -60,7 +73,7 @@ class ConsistentAutoencoder(nnx.Module):
         F = self.koopman_operator.dynamics.kernel.T
         B = self.bwd_koopman_operator.dynamics.kernel.T
 
-        assert B.shape == F.shape, "Should match."
+        assert B.shape == F.shape, "Forward and backward operators should match."
         koopman_dim = B.shape[1]
 
         total_loss = 0.0
@@ -73,14 +86,17 @@ class ConsistentAutoencoder(nnx.Module):
 
     def forward_and_loss_function(self, window):
         """
+        Window must be shaped [B, T, D].
+
         B: batch size
         T: time steps
         D: state dimension
         F: koopman dimension
-
-        Window should be shape [B, T, D].
         """
-        # Encode whole window. Double vmap over batch and time
+        assert len(window.shape) == 3, "Input must be 3D [B, T, D]"
+
+        # Encode whole window.
+        # Double vmap over batch and time
         # shape: [B, T, F]
         z_window = jax.vmap(jax.vmap(self.encoder))(window)
         z0 = z_window[:, 0, :]
@@ -95,12 +111,13 @@ class ConsistentAutoencoder(nnx.Module):
         z_fwd_pred = self.koopman_operator(z0, T=window.shape[1] - 1)
         z_bwd_pred = self.bwd_koopman_operator(zT, T=window.shape[1] - 1)
 
-        # Decode forward and backward predictions. Double vmap over batch and time
+        # Decode forward and backward predictions.
+        # Double vmap over batch and time
         # shape: [B, T, D]
         x_fwd_pred = jax.vmap(jax.vmap(self.decoder))(z_fwd_pred)
         x_bwd_pred = jax.vmap(jax.vmap(self.decoder))(z_bwd_pred)
 
-        # Reconstruction loss
+        # Reconstruction loss (only on initial step)
         loss_recon = jnp.mean((x0_recon - window[:, 0, :]) ** 2)
 
         # Forward loss
