@@ -1,5 +1,5 @@
 """
-Just a vanilla autoencoder.
+Vanilla Koopman autoencoder baseline
 
 A Koopman autoencoder with one linear operator. The encoder and decoder
 are feedforward neural networks with tanh activations. The model is trained with a reconstruction loss,
@@ -75,13 +75,13 @@ class VanillaAutoencoder(nnx.Module):
 
         # Decode initial step
         # shape: [B, D]
-        x0_recon = self.decoder(z_window[:, 0, :])
+        x0_recon = self.decoder(z0)
 
-        # Roll forward and backward in latent space
+        # Roll forward in latent space
         # shape: [B, T, F]
         z_fwd_pred = self.koopman_operator(z0, T=window.shape[1] - 1)
 
-        # Decode forward and backward predictions
+        # Decode forward predictions
         # shape: [B, T, D]
         x_fwd_pred = jax.vmap(jax.vmap(self.decoder))(z_fwd_pred)
 
