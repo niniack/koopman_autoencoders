@@ -168,8 +168,8 @@ def main():
                     metric.update(values=v)
                     metrics_list.append(metric)
             else:
-                for i, (_, v) in enumerate(aux.items()):
-                    metrics_list[i].update(values=v)
+                for j, (_, v) in enumerate(aux.items()):
+                    metrics_list[j].update(values=v)
 
         if epoch % print_epoch == 0:
             print(f"Epoch {epoch}, Loss: {loss:.6f}")
@@ -181,8 +181,8 @@ def main():
 
             # wandb logging
             wandb_run.log({"train/loss": loss}, step=epoch)
-            for i, (k, _) in enumerate(aux.items()):
-                wandb_run.log({f"train/{k}": metrics_list[i].compute()}, step=epoch)
+            for j, (k, _) in enumerate(aux.items()):
+                wandb_run.log({f"train/{k}": metrics_list[j].compute()}, step=epoch)
             wandb_run.log({"val/loss": val_loss}, step=epoch)
             for k, v in val_aux.items():
                 wandb_run.log({f"val/{k}": v}, step=epoch)

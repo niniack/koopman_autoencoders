@@ -1,6 +1,6 @@
 """
-Based on:
-https://arxiv.org/abs/2003.02236
+Azencot, Omri, et al. "Forecasting sequential data using consistent Koopman autoencoders."
+International Conference on Machine Learning. PMLR, 2020.
 https://github.com/erichson/koopmanAE
 """
 
