@@ -1,0 +1,50 @@
+[project]
+name = "kae"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "dotenv>=0.9.9",
+    "flax>=0.12.2",
+    "ipykernel>=7.1.0",
+    "jax[cuda12]>=0.8.2",
+    "matplotlib>=3.10.8",
+    "nbformat>=5.10.4",
+    "plotly>=6.5.1",
+    "seaborn>=0.13.2",
+    "torch",
+    "torchvision",
+    "wandb>=0.24.0",
+]
+
+[tool.uv]
+package=true
+
+[[tool.uv.index]]
+name = "pytorch_cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch_cuda"
+url = "https://download.pytorch.org/whl/cu121"
+explicit = true
+
+
+[tool.uv.sources]
+torch = [{ index = "pytorch_cuda", marker = "sys_platform == 'linux'" }]
+torchvision = [{ index = "pytorch_cuda", marker = "sys_platform == 'linux'" }]
+
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+ignore = ["F722"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]
