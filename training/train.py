@@ -110,6 +110,23 @@ def main():
     # endregion
 
     # region model
+
+    model = DynamicAutoencoder(
+        input_dim=3,
+        hidden_dim=16,
+        koopman_dim=5,
+        dt=0.01,
+        rngs=nnx.Rngs(10),
+    )
+
+    # model = VanillaAutoencoder(
+    #     input_dim=3,
+    #     hidden_dim=16,
+    #     koopman_dim=6,
+    #     dt=0.01,
+    #     rngs=nnx.Rngs(10),
+    # )
+
     # model = ConsistentAutoencoder(
     #     input_dim=3,
     #     hidden_dim=16,
@@ -117,22 +134,6 @@ def main():
     #     dt=0.01,
     #     rngs=nnx.Rngs(10),
     # )
-
-    # model = DynamicAutoencoder(
-    #     input_dim=3,
-    #     hidden_dim=16,
-    #     koopman_dim=6,
-    #     dt=0.01,
-    #     rngs=nnx.Rngs(10),
-    # )
-
-    model = VanillaAutoencoder(
-        input_dim=3,
-        hidden_dim=16,
-        koopman_dim=6,
-        dt=0.01,
-        rngs=nnx.Rngs(10),
-    )
     # endregion
 
     # region wandb config
