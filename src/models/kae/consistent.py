@@ -18,8 +18,7 @@ import jax
 import jax.numpy as jnp
 from flax import nnx
 
-# Just a linear layer
-from models.kae.common import VanillaKoopmanOperator
+from models.kae.operators import DiscreteDenseKoopmanOperator
 
 
 class ConsistentAutoencoder(nnx.Module):
@@ -53,8 +52,8 @@ class ConsistentAutoencoder(nnx.Module):
             nnx.Linear(hidden_dim, input_dim, rngs=rngs),
         )
 
-        self.koopman_operator = VanillaKoopmanOperator(koopman_dim, rngs=rngs)
-        self.bwd_koopman_operator = VanillaKoopmanOperator(koopman_dim, rngs=rngs)
+        self.koopman_operator = DiscreteDenseKoopmanOperator(koopman_dim, rngs=rngs)
+        self.bwd_koopman_operator = DiscreteDenseKoopmanOperator(koopman_dim, rngs=rngs)
 
         # Initialize forward operator as orthogonal
         orth_init = nnx.initializers.orthogonal(scale=init_scale)

@@ -11,7 +11,7 @@ import jax.numpy as jnp
 from flax import nnx
 
 # Just a linear layer
-from models.kae.common import VanillaKoopmanOperator
+from models.kae.operators import DiscreteDenseKoopmanOperator
 
 
 class VanillaAutoencoder(nnx.Module):
@@ -46,13 +46,7 @@ class VanillaAutoencoder(nnx.Module):
             nnx.Linear(hidden_dim, input_dim, rngs=rngs),
         )
 
-        self.koopman_operator = VanillaKoopmanOperator(koopman_dim, rngs=rngs)
-
-        # Initialize Koopman operator as orthogonal
-        orth_init = nnx.initializers.orthogonal(scale=init_scale)
-        self.koopman_operator.dynamics.kernel.value = orth_init(
-            rngs.params(), (koopman_dim, koopman_dim)
-        )
+        self.koopman_operator = DiscreteDenseKoopmanOperator(koopman_dim, rngs=rngs)
 
     def __call__(self, x):
         raise ValueError("Not implemented. Use forward_and_loss_function instead.")
