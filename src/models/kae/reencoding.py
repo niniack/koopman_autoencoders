@@ -12,11 +12,12 @@ import jax
 import jax.numpy as jnp
 from flax import nnx
 
+from models.kae.base import KoopmanAutoencoder
 from models.kae.operators import ContinuousBilinearKoopmanOperator
 from models.kae.utils import UnitNormWrapper
 
 
-class ReencodingAutoencoder(nnx.Module):
+class ReencodingAutoencoder(KoopmanAutoencoder):
     def __init__(
         self,
         input_dim: int,
@@ -73,7 +74,7 @@ class ReencodingAutoencoder(nnx.Module):
 
         # Roll forward in latent space
         # shape: [B, T, F]
-        z_fwd_pred = self.koopman_operator(z0, T=window.shape[1] - 1)
+        z_fwd_pred = self.rollout_latent(z0, T=window.shape[1] - 1)
 
         # Decode forward predictions.
         # Double vmap over batch and time
