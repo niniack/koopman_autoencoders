@@ -3,17 +3,16 @@ import os
 import jax
 import jax.numpy as jnp
 import optax
-import seaborn as sns
 from dotenv import load_dotenv
 from flax import nnx
-from matplotlib import pyplot as plt
 
 import wandb
 from models import (
-    ConsistentAutoencoder,
-    DynamicAutoencoder,
-    ReencodingAutoencoder,
-    VanillaAutoencoder,
+    AugmentedInvertibleAutoencoder,
+    ConsistentAutoencoder,  # noqa: F401
+    DynamicAutoencoder,  # noqa: F401
+    ReencodingAutoencoder,  # noqa: F401
+    VanillaAutoencoder,  # noqa: F401
 )
 from systems.lorenz import lorenz
 from utils import prepare_data
@@ -122,6 +121,13 @@ def main():
         dt=0.01,
         rngs=nnx.Rngs(10),
     )
+    # model = AugmentedInvertibleAutoencoder(
+    #     input_dim=3,
+    #     hidden_dim=128,
+    #     augment_dim=12,
+    #     dt=0.01,
+    #     rngs=nnx.Rngs(10),
+    # )
     # endregion
 
     # region wandb config
@@ -180,7 +186,7 @@ def main():
     # region test rollout
     test_t_start = 500
     encoded = model.encoder(test_rollout[:, test_t_start, :])
-    pred_rollout = model.rollout_latent(encoded, T=window_size, reencode_every=30)
+    pred_rollout = model.rollout_latent(encoded, T=window_size, reencode_every=None)
     decoded = jax.vmap(model.decoder)(pred_rollout[0])
     log_rollout(
         test_rollout.squeeze()[test_t_start : test_t_start + window_size],
