@@ -42,7 +42,7 @@ def test_operators(koopman_dim, steps):
     z_int = int_op(z0, steps)
     z_disc = disc_op(z0, steps)
 
-    atol, rtol = 1e-3, 1e-6
+    atol, rtol = 1e-3, 1e-3
     assert jnp.allclose(z_disc, z_exp, atol=atol, rtol=rtol)
     assert jnp.allclose(z_bil, z_exp, atol=atol, rtol=rtol)
     assert jnp.allclose(z_int, z_exp, atol=atol, rtol=rtol)

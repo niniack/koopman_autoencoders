@@ -9,7 +9,12 @@ from flax import nnx
 from matplotlib import pyplot as plt
 
 import wandb
-from models import ConsistentAutoencoder, DynamicAutoencoder, VanillaAutoencoder
+from models import (
+    ConsistentAutoencoder,
+    DynamicAutoencoder,
+    ReencodingAutoencoder,
+    VanillaAutoencoder,
+)
 from systems.lorenz import lorenz
 from utils import prepare_data
 
@@ -110,30 +115,13 @@ def main():
     # endregion
 
     # region model
-
-    model = DynamicAutoencoder(
+    model = ReencodingAutoencoder(
         input_dim=3,
         hidden_dim=16,
-        koopman_dim=5,
+        koopman_dim=6,
         dt=0.01,
         rngs=nnx.Rngs(10),
     )
-
-    # model = VanillaAutoencoder(
-    #     input_dim=3,
-    #     hidden_dim=16,
-    #     koopman_dim=6,
-    #     dt=0.01,
-    #     rngs=nnx.Rngs(10),
-    # )
-
-    # model = ConsistentAutoencoder(
-    #     input_dim=3,
-    #     hidden_dim=16,
-    #     koopman_dim=6,
-    #     dt=0.01,
-    #     rngs=nnx.Rngs(10),
-    # )
     # endregion
 
     # region wandb config
@@ -192,7 +180,7 @@ def main():
     # region test rollout
     test_t_start = 500
     encoded = model.encoder(test_rollout[:, test_t_start, :])
-    pred_rollout = model.koopman_operator(encoded, T=window_size)
+    pred_rollout = model.rollout_latent(encoded, T=window_size, reencode_every=30)
     decoded = jax.vmap(model.decoder)(pred_rollout[0])
     log_rollout(
         test_rollout.squeeze()[test_t_start : test_t_start + window_size],

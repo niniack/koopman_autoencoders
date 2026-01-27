@@ -74,7 +74,7 @@ class ReencodingAutoencoder(KoopmanAutoencoder):
 
         # Roll forward in latent space
         # shape: [B, T, F]
-        z_fwd_pred = self.rollout_latent(z0, T=window.shape[1] - 1)
+        z_fwd_pred = self.rollout_latent(z0, T=window.shape[1] - 1, reencode_every=30)
 
         # Decode forward predictions.
         # Double vmap over batch and time
@@ -98,4 +98,5 @@ class ReencodingAutoencoder(KoopmanAutoencoder):
             "recon": loss_recon,
             "linear": loss_linear,
             "forward_pred": loss_fwd,
+            "sparsity": loss_sparse,
         }

@@ -29,8 +29,3 @@ class KoopmanAutoencoder(nnx.Module):
             remaining -= steps
 
         return jnp.concatenate(z_chunks, axis=1)
-
-    def rollout(self, x0: jnp.ndarray, T: int, reencode_every: int | None = None):
-        z0 = self.encoder(x0)
-        z_traj = self.rollout_latent(z0, T, reencode_every)
-        return jax.vmap(jax.vmap(self.decoder))(z_traj)
